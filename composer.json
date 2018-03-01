@@ -1,0 +1,27 @@
+{
+  "name": "outcloud/api-requests-unit-of-work",
+  "description": "API Requests class uses pattern like unit of work to do one bigger request instead of many simpler ones",
+  "type": "library",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Grzegorz Lieske",
+      "email": "grzesiu.lieske@gmail.com"
+    }
+  ],
+  "require": {
+    "php": ">=7.0",
+    "outcloud/php-core-lib": "^1.0",
+    "symfony/cache": "^4.0",
+    "doctrine/collections": "^1.5",
+    "myclabs/php-enum": "^1.5"
+  },
+  "autoload": {
+    "psr-4": {
+      "OutCloud\\": "./src"
+    },
+    "files": [
+      "/src/php_array_avg_callable.php"
+    ]
+  }
+}
