@@ -10,18 +10,19 @@
     }
   ],
   "require": {
-    "php": ">=7.0",
-    "outcloud/php-core-lib": "^1.0",
+    "php": ">=7.1",
     "symfony/cache": "^4.0",
-    "doctrine/collections": "^1.5",
-    "myclabs/php-enum": "^1.5"
+    "myclabs/php-enum": "^1.5",
+    "guzzlehttp/guzzle": "^6.3",
+    "php-ds/php-ds": "^1.2"
+  },
+  "suggest": {
+    "ext-ds": "to improve performance and reduce memory usage",
+    "ext-json": "required with ext-ds"
   },
   "autoload": {
     "psr-4": {
       "OutCloud\\": "./src"
-    },
-    "files": [
-      "/src/php_array_avg_callable.php"
-    ]
+    }
   }
 }

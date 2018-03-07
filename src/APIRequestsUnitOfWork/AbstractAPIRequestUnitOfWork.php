@@ -2,8 +2,11 @@
 
 namespace OutCloud\APIRequestsUnitOfWork;
 
-use Doctrine\Common\Collections\ArrayCollection;
+use Ds\Set;
+use GuzzleHttp\Client;
+use GuzzleHttp\Psr7\Request;
 use OutCloud\APIRequestsUnitOfWork\Exception\TargetDoesNotExistException;
+use OutCloud\APIRequestsUnitOfWork\Exception\UnitOfWorkTargetIsNotRegisteredForGivenTargetException;
 use Symfony\Component\Cache\Simple\AbstractCache;
 
 class AbstractAPIRequestUnitOfWork
@@ -12,18 +15,22 @@ class AbstractAPIRequestUnitOfWork
     private $cache;
     /** @var Config */
     private $config;
-    /** @var ArrayCollection */
+    /** @var Set */
     private $targets;
-
+    /** @var Client */
+    private $client;
 
     /**
      * AbstractCumulatedUnitOfWork constructor.
      * @param AbstractCache $cache
+     * @param null|Config $config
      */
-    public function __construct(AbstractCache $cache)
+    public function __construct(AbstractCache $cache, Client $guzzleClient, ?Config $config = null)
     {
         $this->cache = $cache;
-        $this->targets = new ArrayCollection();
+        $this->config = $config ?? new Config();
+        $this->targets = new Set();
+        $this->client = $guzzleClient;
     }
 
     /**
@@ -31,40 +38,64 @@ class AbstractAPIRequestUnitOfWork
      */
     public function registerTargets(UnitOfWorkTarget ...$targets): void
     {
-        /** @var UnitOfWorkTarget $target */
-        foreach ($targets as $target) {
-            if ($this->targets->get($target->getTargetHash()) !== null) {
-                $this->targets->set($target->getTargetHash(), $target);
-            }
-        }
+        $this->targets->add(...$targets);
     }
 
     /**
-     * @param $target
+     * @param UnitOfWorkTarget[] ...$targets
      * @throws TargetDoesNotExistException
      */
-    public function invalidateTarget($target): void
+    public function invalidateTargets(UnitOfWorkTarget ...$targets): void
     {
-        $target = $this->getUnitOfWorkTargetForTarget($target);
-
-        if (!$target instanceof UnitOfWorkTarget) {
+        if (!$this->targets->contains(...$targets)) {
             throw new TargetDoesNotExistException("UnitOfWorkTarget couldn't be found");
         }
 
-        $this->targets->removeElement($target);
+        $this->targets->remove(...$targets);
     }
 
     /**
      * @param $target
      * @return null|UnitOfWorkTarget
+     * @throws UnitOfWorkTargetIsNotRegisteredForGivenTargetException
      */
     public function getUnitOfWorkTargetForTarget($target): ?UnitOfWorkTarget
     {
-        return $this->targets->map(function(UnitOfWorkTarget $t) use ($target){
+        $set = $this->targets->filter(function (UnitOfWorkTarget $t) use ($target) {
             return $t->getTarget() === $target;
-        })->first() ?: null;
+        });
+
+        if (!$set->count()) {
+            throw new UnitOfWorkTargetIsNotRegisteredForGivenTargetException();
+        }
+
+        return $set->first();
     }
 
+    public function processTargets(): void
+    {
+        /** @var UnitOfWorkTarget $target */
+        foreach ($this->targets as $target) {
+            $rC = $target->getRequestCreator() ?? [$this, 'getRequest'];
+            $request = $rC();
+
+        }
+    }
+
+    protected function getReqest($data): Request
+    {
+        $r = new Request('GET', 'localhost', [], $data);
+    }
+
+    private function execRequest(Request $request)
+    {
+        if ($this->config->isAsyncEnabled()) {
+            $this->client->sendAsync($request);
+        } else {
+            $this->client->send($request);
+        }
+
+    }
 
 
 }

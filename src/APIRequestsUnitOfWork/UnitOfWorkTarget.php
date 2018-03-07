@@ -2,7 +2,6 @@
 
 namespace OutCloud\APIRequestsUnitOfWork;
 
-
 use OutCloud\APIRequestsUnitOfWork\Exception\TargetIsNotProcessedException;
 
 class UnitOfWorkTarget
@@ -11,7 +10,7 @@ class UnitOfWorkTarget
     private $targetHash;
     /** @var mixed */
     private $target;
-    /** @var Callable|null */
+    /** @var Callable */
     private $callback;
     /** @var Callable|null */
     private $requestCreator;
@@ -35,7 +34,7 @@ class UnitOfWorkTarget
     {
         $this->targetHash = \spl_object_hash($target);
         $this->target = $target;
-        $this->callback = $callback;
+        $this->callback = $callback ?? function() {};
         $this->requestCreator = $requestCreator;
         $this->responseParser = $responseParser;
         $this->isProcessed = false;
@@ -79,9 +78,9 @@ class UnitOfWorkTarget
     }
 
     /**
-     * @return Callable|null
+     * @return Callable
      */
-    public function getCallback(): ?Callable
+    public function getCallback(): Callable
     {
         return $this->callback;
     }

@@ -1,0 +1,18 @@
+version: '3'
+services:
+  nginx:
+    build: docker/nginx
+    image: outcloud-test-env-nginx
+    ports:
+      - 8080:80
+    volumes:
+      - .:/var/www/html
+  php:
+    build:
+      context: docker/php
+      args:
+        TARGET_GID: 1000
+    expose:
+      - 9000
+    volumes:
+      - .:/var/www/html
