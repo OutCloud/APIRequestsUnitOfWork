@@ -19,6 +19,7 @@ USER_EXISTS=$(cat /etc/passwd | grep :x:$TARGET_GID | wc -l)
   if [ ${USER_EXISTS} == "0" ]; then
     useradd -M -N -u ${TARGET_GID} tempuser # create tempuser
     usermod -L tempuser # do not allow tempuser to login
+    usermod -a -G ${GRP} tempuser
   else
     USR=$(getent passwd $TARGET_GID | cut -d: -f1)
     usermod -a -G ${GRP} ${USR}
